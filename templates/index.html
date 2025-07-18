@@ -71,16 +71,20 @@
                                     <i class="fas fa-plus-circle text-success me-1"></i>
                                     Marks per Correct Answer
                                 </label>
-                                <input type="number" class="form-control" id="positive_marks" name="positive_marks" 
-                                       value="1" min="0" step="any" placeholder="e.g., 1.5">
+                                <input type="text" class="form-control" id="positive_marks" name="positive_marks" 
+                                       value="1" pattern="^\d*\.?\d+$" placeholder="e.g., 1.5"
+                                       title="Enter a decimal number (e.g., 1, 1.5, 2.25)"
+                                       oninput="validateDecimal(this)">
                             </div>
                             <div class="col-md-4">
                                 <label for="negative_marks" class="form-label">
                                     <i class="fas fa-minus-circle text-danger me-1"></i>
                                     Negative Marks per Wrong Answer
                                 </label>
-                                <input type="number" class="form-control" id="negative_marks" name="negative_marks" 
-                                       value="0" min="0" step="any" placeholder="e.g., 0.33">
+                                <input type="text" class="form-control" id="negative_marks" name="negative_marks" 
+                                       value="0" pattern="^\d*\.?\d+$" placeholder="e.g., 0.33"
+                                       title="Enter a decimal number (e.g., 0.33, 0.5, 1.25)"
+                                       oninput="validateDecimal(this)">
                             </div>
                         </div>
 
@@ -195,8 +199,50 @@
 </div>
 
 <script>
+function validateDecimal(input) {
+    // Remove any non-digit and non-decimal characters
+    let value = input.value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = value.split('.');
+    if (parts.length > 2) {
+        value = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Update the input value
+    input.value = value;
+    
+    // Visual feedback
+    const isValid = /^\d*\.?\d*$/.test(value) && value !== '';
+    if (isValid) {
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+    } else if (value === '') {
+        input.classList.remove('is-invalid', 'is-valid');
+    } else {
+        input.classList.remove('is-valid');
+        input.classList.add('is-invalid');
+    }
+}
+
 document.getElementById('configForm').addEventListener('submit', function(e) {
     const submitBtn = document.getElementById('submitBtn');
+    const positiveMarks = document.getElementById('positive_marks').value;
+    const negativeMarks = document.getElementById('negative_marks').value;
+    
+    // Validate decimal inputs
+    if (!/^\d*\.?\d*$/.test(positiveMarks) || positiveMarks === '' || parseFloat(positiveMarks) < 0) {
+        e.preventDefault();
+        alert('Please enter a valid positive marks value (e.g., 1, 1.5, 2.25)');
+        return;
+    }
+    
+    if (!/^\d*\.?\d*$/.test(negativeMarks) || negativeMarks === '' || parseFloat(negativeMarks) < 0) {
+        e.preventDefault();
+        alert('Please enter a valid negative marks value (e.g., 0, 0.33, 0.5)');
+        return;
+    }
+    
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
     submitBtn.disabled = true;
 });
