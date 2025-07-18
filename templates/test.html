@@ -254,45 +254,59 @@ function generateQuestionNavigation() {
     navGrid.innerHTML = html;
 }
 
-function loadQuestion(questionIndex) {
-    if (questionIndex < 0 || questionIndex >= testConfig.questions.length) {
+async function loadQuestion(questionIndex) {
+    if (questionIndex < 0 || questionIndex >= testConfig.total_questions) {
         return;
     }
     
-    const question = testConfig.questions[questionIndex];
-    currentQuestion = questionIndex;
-    
-    // Update question content
-    document.getElementById('question-content').innerHTML = `
-        <h4>Q${questionIndex + 1}. ${question.question}</h4>
-    `;
-    
-    // Update options
-    let optionsHtml = '';
-    const userAnswer = userAnswers[questionIndex] || '';
-    
-    for (const [letter, text] of Object.entries(question.options)) {
-        const checked = userAnswer === letter ? 'checked' : '';
-        optionsHtml += `
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="radio" name="answer" id="option${letter}" 
-                       value="${letter}" ${checked} onchange="selectAnswer('${letter}')">
-                <label class="form-check-label option-label w-100" for="option${letter}">
-                    <strong>${letter})</strong> ${text}
-                </label>
-            </div>
+    try {
+        // Fetch question from server
+        const response = await fetch(`/get_question/${questionIndex}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error('Failed to load question:', data.error);
+            return;
+        }
+        
+        const question = data.question;
+        currentQuestion = questionIndex;
+        
+        // Update question content
+        document.getElementById('question-content').innerHTML = `
+            <h4>Q${questionIndex + 1}. ${question.question}</h4>
         `;
+        
+        // Update options
+        let optionsHtml = '';
+        const userAnswer = userAnswers[questionIndex] || '';
+        
+        for (const [letter, text] of Object.entries(question.options)) {
+            const checked = userAnswer === letter ? 'checked' : '';
+            optionsHtml += `
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="answer" id="option${letter}" 
+                           value="${letter}" ${checked} onchange="selectAnswer('${letter}')">
+                    <label class="form-check-label option-label w-100" for="option${letter}">
+                        <strong>${letter})</strong> ${text}
+                    </label>
+                </div>
+            `;
+        }
+        
+        document.getElementById('options-container').innerHTML = optionsHtml;
+        
+        // Update navigation
+        updateQuestionDisplay();
+        updateNavigationButtons();
+        generateQuestionNavigation();
+        
+        // Hide feedback
+        document.getElementById('feedback-container').style.display = 'none';
+        
+    } catch (error) {
+        console.error('Error loading question:', error);
     }
-    
-    document.getElementById('options-container').innerHTML = optionsHtml;
-    
-    // Update navigation
-    updateQuestionDisplay();
-    updateNavigationButtons();
-    generateQuestionNavigation();
-    
-    // Hide feedback
-    document.getElementById('feedback-container').style.display = 'none';
 }
 
 function selectAnswer(answer) {
