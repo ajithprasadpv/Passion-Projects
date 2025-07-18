@@ -8,9 +8,8 @@ Upload a question paper with its answer key, start a test session, and receive i
 
 ## 🚀 Preview
 
-![Home Page](./Examsimulator/screenshots/home.png)
-![Upload Page](./Examsimulator/screenshots/upload.png)
-
+![Home Page](./screenshots/home.png)
+![Upload Page](./screenshots/upload.png)
 ---
 
 ## ✨ Features
