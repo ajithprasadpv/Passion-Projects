@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Test Results - Mock Test Simulator{% endblock %}
+
+{% block extra_head %}
+<style>
+.result-card {
+    border-left: 4px solid var(--bs-primary);
+}
+.score-display {
+    font-size: 2rem;
+    font-weight: bold;
+}
+.question-result {
+    border-left: 3px solid;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+.question-result.correct {
+    border-left-color: var(--bs-success);
+    background-color: rgba(var(--bs-success-rgb), 0.1);
+}
+.question-result.incorrect {
+    border-left-color: var(--bs-danger);
+    background-color: rgba(var(--bs-danger-rgb), 0.1);
+}
+.question-result.unanswered {
+    border-left-color: var(--bs-warning);
+    background-color: rgba(var(--bs-warning-rgb), 0.1);
+}
+.results-summary {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-info) 100%);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Results Header -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card result-card mb-4">
+                <div class="card-header results-summary text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h3 class="mb-0">
+                                <i class="fas fa-trophy me-2"></i>
+                                Test Results
+                            </h3>
+                            <p class="mb-0 opacity-75">{{ config.name }} • {{ config.email }}</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="score-display">
+                                {{ "%.1f"|format(results.total_score) }} / {{ "%.0f"|format(config.total_questions * config.positive_marks) }}
+                            </div>
+                            <div class="h5 mb-0">{{ "%.1f"|format(results.percentage) }}%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Summary Statistics -->
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-success mb-0">{{ results.correct }}</h4>
+                                <small class="text-muted">Correct</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-danger mb-0">{{ results.incorrect }}</h4>
+                                <small class="text-muted">Incorrect</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-warning mb-0">{{ results.unanswered }}</h4>
+                                <small class="text-muted">Unanswered</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-info mb-0">{{ results.total_questions }}</h4>
+                            <small class="text-muted">Total Questions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoring Breakdown -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>
+                        Scoring Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td>Correct Answers ({{ results.correct }})</td>
+                                    <td class="text-end text-success">
+                                        +{{ "%.1f"|format(results.correct * config.positive_marks) }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Wrong Answers ({{ results.incorrect }})</td>
+                                    <td class="text-end text-danger">
+                                        -{{ "%.1f"|format(results.incorrect * config.negative_marks) }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Unanswered ({{ results.unanswered }})</td>
+                                    <td class="text-end text-muted">0</td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td><strong>Total Score</strong></td>
+                                    <td class="text-end">
+                                        <strong>{{ "%.1f"|format(results.total_score) }}</strong>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <div class="mb-3">
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success" style="width: {{ (results.correct / results.total_questions) * 100 }}%"></div>
+                                        <div class="progress-bar bg-danger" style="width: {{ (results.incorrect / results.total_questions) * 100 }}%"></div>
+                                        <div class="progress-bar bg-warning" style="width: {{ (results.unanswered / results.total_questions) * 100 }}%"></div>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-flex justify-content-between">
+                                    <span>Correct</span>
+                                    <span>Incorrect</span>
+                                    <span>Unanswered</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Question Analysis -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list-alt me-2"></i>
+                        Question-wise Analysis
+                    </h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="filterQuestions('all')">All</button>
+                        <button type="button" class="btn btn-outline-success" onclick="filterQuestions('correct')">Correct</button>
+                        <button type="button" class="btn btn-outline-danger" onclick="filterQuestions('incorrect')">Incorrect</button>
+                        <button type="button" class="btn btn-outline-warning" onclick="filterQuestions('unanswered')">Unanswered</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="questions-container">
+                        {% for result in results.question_results %}
+                        <div class="question-result {{ result.status }}" data-status="{{ result.status }}">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0">
+                                            <span class="badge bg-secondary me-2">Q{{ result.question_num }}</span>
+                                            {{ result.question }}
+                                        </h6>
+                                        <div class="text-end">
+                                            {% if result.status == 'correct' %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>
+                                                    +{{ "%.1f"|format(config.positive_marks) }}
+                                                </span>
+                                            {% elif result.status == 'incorrect' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>
+                                                    -{{ "%.1f"|format(config.negative_marks) }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-minus me-1"></i>
+                                                    0
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row small">
+                                        <div class="col-md-4">
+                                            <strong>Your Answer:</strong>
+                                            {% if result.user_answer %}
+                                                <span class="badge bg-{{ 'success' if result.status == 'correct' else 'danger' if result.status == 'incorrect' else 'secondary' }}">
+                                                    {{ result.user_answer }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Not answered</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Correct Answer:</strong>
+                                            <span class="badge bg-success">{{ result.correct_answer }}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Result:</strong>
+                                            {% if result.status == 'correct' %}
+                                                <span class="text-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Correct
+                                                </span>
+                                            {% elif result.status == 'incorrect' %}
+                                                <span class="text-danger">
+                                                    <i class="fas fa-times-circle me-1"></i>Incorrect
+                                                </span>
+                                            {% else %}
+                                                <span class="text-warning">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>Not Answered
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-10 text-center">
+            <a href="{{ url_for('restart') }}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-redo me-2"></i>
+                Take Another Test
+            </a>
+            <button type="button" class="btn btn-outline-secondary btn-lg" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>
+                Print Results
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterQuestions(status) {
+    const questions = document.querySelectorAll('.question-result');
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    
+    // Update button states
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Filter questions
+    questions.forEach(question => {
+        if (status === 'all' || question.dataset.status === status) {
+            question.style.display = 'block';
+        } else {
+            question.style.display = 'none';
+        }
+    });
+}
+
+// Set initial filter state
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.btn-group .btn').classList.add('active');
+});
+
+// Print styles
+const printStyles = `
+@media print {
+    .btn, .card-header .btn-group, .navbar, footer {
+        display: none !important;
+    }
+    .card {
+        border: 1px solid #000 !important;
+        margin-bottom: 20px !important;
+    }
+    .question-result {
+        page-break-inside: avoid;
+        margin-bottom: 15px !important;
+    }
+}
+`;
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = printStyles;
+document.head.appendChild(styleSheet);
+</script>
+{% endblock %}

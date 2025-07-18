@@ -1,0 +1,414 @@
+/* Custom styles for Mock Test Simulator */
+
+/* Timer Styles */
+.timer-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.timer-display .timer-icon {
+    margin-right: 8px;
+    font-size: 1.2em;
+}
+
+.timer-display .timer-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.timer-display .time-value {
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+.timer-display .time-label {
+    font-size: 0.7em;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Timer Warning States */
+.timer-normal {
+    color: var(--bs-info);
+}
+
+.timer-warning {
+    color: var(--bs-warning);
+}
+
+.timer-danger {
+    color: var(--bs-danger);
+}
+
+.timer-critical {
+    color: var(--bs-danger);
+    animation: pulse 1s infinite;
+}
+
+/* Pulse animation for critical time */
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.timer-pulse {
+    animation: pulse 1s infinite;
+}
+
+/* Question Navigation Styles */
+.question-nav-btn {
+    width: 40px;
+    height: 40px;
+    margin: 2px;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.question-nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.question-nav-btn.active {
+    border-width: 2px;
+    box-shadow: 0 0 0 2px var(--bs-primary);
+}
+
+/* Option Selection Styles */
+.option-label {
+    cursor: pointer;
+    padding: 12px 15px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    display: block;
+    width: 100%;
+}
+
+.option-label:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    border-color: var(--bs-primary);
+    transform: translateX(5px);
+}
+
+.form-check-input:checked + .option-label {
+    background-color: rgba(var(--bs-success-rgb), 0.2);
+    border-color: var(--bs-success);
+    font-weight: bold;
+}
+
+/* Question Progress Styles */
+.progress {
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* Card Enhancements */
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-info) 100%);
+    color: white;
+}
+
+/* Button Enhancements */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-lg {
+    padding: 12px 30px;
+    font-size: 1.1em;
+}
+
+/* Alert Enhancements */
+.alert {
+    border: none;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    border-left-color: var(--bs-success);
+    background-color: rgba(var(--bs-success-rgb), 0.1);
+}
+
+.alert-danger {
+    border-left-color: var(--bs-danger);
+    background-color: rgba(var(--bs-danger-rgb), 0.1);
+}
+
+.alert-warning {
+    border-left-color: var(--bs-warning);
+    background-color: rgba(var(--bs-warning-rgb), 0.1);
+}
+
+.alert-info {
+    border-left-color: var(--bs-info);
+    background-color: rgba(var(--bs-info-rgb), 0.1);
+}
+
+/* Form Enhancements */
+.form-control, .form-select {
+    border-radius: 6px;
+    border: 1px solid var(--bs-border-color);
+    transition: all 0.2s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+/* Results Page Styles */
+.result-card {
+    border-left: 4px solid var(--bs-primary);
+}
+
+.score-display {
+    font-size: 2.5rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.question-result {
+    border-left: 3px solid;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.question-result:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.question-result.correct {
+    border-left-color: var(--bs-success);
+    background-color: rgba(var(--bs-success-rgb), 0.05);
+}
+
+.question-result.incorrect {
+    border-left-color: var(--bs-danger);
+    background-color: rgba(var(--bs-danger-rgb), 0.05);
+}
+
+.question-result.unanswered {
+    border-left-color: var(--bs-warning);
+    background-color: rgba(var(--bs-warning-rgb), 0.05);
+}
+
+/* Statistics Cards */
+.stats-card {
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.1) 0%, rgba(var(--bs-info-rgb), 0.1) 100%);
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+}
+
+.stats-label {
+    font-size: 0.9em;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Navigation Enhancements */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.3em;
+}
+
+.navbar-text {
+    font-size: 0.95em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .timer-display {
+        font-size: 0.9em;
+    }
+    
+    .score-display {
+        font-size: 2rem;
+    }
+    
+    .question-nav-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 0.85em;
+    }
+    
+    .stats-number {
+        font-size: 1.5rem;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .question-result {
+        padding: 10px;
+    }
+    
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar, .btn, .card-header .btn-group, footer {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .question-result {
+        page-break-inside: avoid;
+        margin-bottom: 15px !important;
+        border: 1px solid #ccc !important;
+    }
+    
+    .score-display {
+        color: #000 !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--bs-primary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Accessibility Enhancements */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Focus Management */
+.btn:focus,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid var(--bs-border-color) !important;
+    }
+    
+    .question-result {
+        border-left-width: 5px !important;
+    }
+    
+    .btn {
+        border-width: 2px !important;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .timer-pulse {
+        animation: none !important;
+    }
+}

@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Test Configuration - Mock Test Simulator{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-clipboard-check text-primary me-3"></i>
+                    Mock Test Simulator
+                </h1>
+                <p class="lead text-muted">
+                    Upload your question paper and take a timed mock test with automatic scoring
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Configuration Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Test Configuration
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data" id="configForm">
+                        <!-- Personal Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-user me-1"></i>
+                                    Full Name *
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>
+                                    Email Address *
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+
+                        <!-- Test Settings -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label for="duration" class="form-label">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Test Duration
+                                </label>
+                                <select class="form-select" id="duration" name="duration">
+                                    <option value="15">15 minutes</option>
+                                    <option value="30" selected>30 minutes</option>
+                                    <option value="45">45 minutes</option>
+                                    <option value="60">1 hour</option>
+                                    <option value="90">1.5 hours</option>
+                                    <option value="120">2 hours</option>
+                                    <option value="180">3 hours</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="positive_marks" class="form-label">
+                                    <i class="fas fa-plus-circle text-success me-1"></i>
+                                    Marks per Correct Answer
+                                </label>
+                                <input type="number" class="form-control" id="positive_marks" name="positive_marks" 
+                                       value="1" min="0" step="0.25">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="negative_marks" class="form-label">
+                                    <i class="fas fa-minus-circle text-danger me-1"></i>
+                                    Negative Marks per Wrong Answer
+                                </label>
+                                <input type="number" class="form-control" id="negative_marks" name="negative_marks" 
+                                       value="0" min="0" step="0.25">
+                            </div>
+                        </div>
+
+                        <!-- Feedback Mode -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-comment-alt me-1"></i>
+                                Feedback Mode
+                            </label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="feedback_mode" 
+                                               id="feedback_immediate" value="immediate">
+                                        <label class="form-check-label" for="feedback_immediate">
+                                            <strong>Immediate Feedback</strong><br>
+                                            <small class="text-muted">See correct answers after each question</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="feedback_mode" 
+                                               id="feedback_final" value="final" checked>
+                                        <label class="form-check-label" for="feedback_final">
+                                            <strong>Final Feedback</strong><br>
+                                            <small class="text-muted">See results only after test completion</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="mb-4">
+                            <label for="file" class="form-label">
+                                <i class="fas fa-file-upload me-1"></i>
+                                Upload Question Paper *
+                            </label>
+                            <input type="file" class="form-control" id="file" name="file" 
+                                   accept=".pdf,.docx" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Supported formats: PDF, DOCX (Max size: 16MB)
+                            </div>
+                        </div>
+
+                        <!-- File Format Instructions -->
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                File Format Requirements
+                            </h6>
+                            <p class="mb-2">Your question paper should follow this format:</p>
+                            <ul class="mb-2">
+                                <li>Questions numbered as Q1, Q2, Q3, etc.</li>
+                                <li>Multiple choice options as A), B), C), D)</li>
+                                <li>Include an "Answer Key" section at the end</li>
+                                <li>Answer key format: 1. A, 2. B, 3. C, etc.</li>
+                            </ul>
+                            <small class="text-muted">
+                                The system will automatically parse questions until it finds the "Answer Key" section.
+                            </small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload File & Start Test
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Features</h3>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <i class="fas fa-timer fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Timed Tests</h5>
+                    <p class="card-text">Configurable test duration with countdown timer and auto-submit</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <i class="fas fa-calculator fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Smart Scoring</h5>
+                    <p class="card-text">Customizable positive and negative marking system</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Detailed Results</h5>
+                    <p class="card-text">Comprehensive analysis with question-wise breakdown</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('configForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+
+{% block title %}Test in Progress - Mock Test Simulator{% endblock %}
+
+{% block extra_head %}
+<style>
+.question-container {
+    min-height: 400px;
+}
+.timer-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.question-navigation {
+    max-height: 300px;
+    overflow-y: auto;
+}
+.question-nav-btn {
+    width: 40px;
+    height: 40px;
+    margin: 2px;
+}
+.option-label {
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+.option-label:hover {
+    background-color: var(--bs-secondary);
+}
+.feedback-alert {
+    margin-top: 15px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Test Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user me-2"></i>
+                                {{ config.name }}
+                            </h5>
+                            <small class="text-muted">{{ config.email }}</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="timer-display text-warning" id="timer">
+                                <i class="fas fa-clock me-2"></i>
+                                <span id="time-remaining">--:--</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div>
+                                <strong>Question <span id="current-q-display">1</span> of {{ config.total_questions }}</strong>
+                            </div>
+                            <div class="progress mt-1" style="height: 5px;">
+                                <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button type="button" class="btn btn-success" onclick="submitTest()">
+                                <i class="fas fa-check me-2"></i>
+                                Submit Test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Question Area -->
+        <div class="col-md-9">
+            <div class="card question-container">
+                <div class="card-body">
+                    <div id="question-content">
+                        <!-- Question will be loaded here -->
+                    </div>
+                    
+                    <!-- Answer Options -->
+                    <div id="options-container" class="mt-4">
+                        <!-- Options will be loaded here -->
+                    </div>
+                    
+                    <!-- Feedback Area (for immediate feedback mode) -->
+                    <div id="feedback-container" style="display: none;">
+                        <!-- Feedback will be shown here -->
+                    </div>
+                    
+                    <!-- Navigation Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-secondary" id="prev-btn" onclick="previousQuestion()">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Previous
+                            </button>
+                        </div>
+                        <div class="col-6 text-end">
+                            <button type="button" class="btn btn-outline-primary" id="next-btn" onclick="nextQuestion()">
+                                Next
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Navigation Panel -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Question Navigator
+                    </h6>
+                </div>
+                <div class="card-body question-navigation">
+                    <div id="question-nav-grid">
+                        <!-- Question navigation buttons will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Statistics -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Test Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-success">
+                                <strong id="answered-count">0</strong><br>
+                                <small>Answered</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-warning">
+                                <strong id="unanswered-count">{{ config.total_questions }}</strong><br>
+                                <small>Remaining</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-info">
+                                <strong>{{ config.total_questions }}</strong><br>
+                                <small>Total</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scoring Information -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>
+                        Scoring
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="d-flex justify-content-between">
+                            <span>Correct Answer:</span>
+                            <span class="text-success">+{{ config.positive_marks }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Wrong Answer:</span>
+                            <span class="text-danger">-{{ config.negative_marks }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>No Answer:</span>
+                            <span class="text-muted">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-submit Modal -->
+<div class="modal fade" id="autoSubmitModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Time's Up!
+                </h5>
+            </div>
+            <div class="modal-body">
+                <p>The test time has expired. Your test will be submitted automatically.</p>
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Submitting...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Test configuration from server
+const testConfig = {{ config | tojson }};
+const testState = {{ state | tojson }};
+
+// Current test state
+let currentQuestion = testState.current_question || 0;
+let userAnswers = testState.answers || {};
+let startTime = testState.start_time;
+let timeLeft = testConfig.duration * 60; // Convert minutes to seconds
+
+// Initialize test
+document.addEventListener('DOMContentLoaded', function() {
+    generateQuestionNavigation();
+    loadQuestion(currentQuestion);
+    updateStatistics();
+    
+    // Start timer if start time is set
+    if (startTime) {
+        const elapsed = Math.floor(Date.now() / 1000) - startTime;
+        timeLeft = Math.max(0, timeLeft - elapsed);
+        startTimer();
+    }
+});
+
+function generateQuestionNavigation() {
+    const navGrid = document.getElementById('question-nav-grid');
+    let html = '';
+    
+    for (let i = 0; i < testConfig.total_questions; i++) {
+        const answered = userAnswers.hasOwnProperty(i);
+        const btnClass = answered ? 'btn-success' : 'btn-outline-secondary';
+        const current = i === currentQuestion ? 'active' : '';
+        
+        html += `<button type="button" class="btn ${btnClass} question-nav-btn ${current}" 
+                 onclick="goToQuestion(${i})">${i + 1}</button>`;
+    }
+    
+    navGrid.innerHTML = html;
+}
+
+function loadQuestion(questionIndex) {
+    if (questionIndex < 0 || questionIndex >= testConfig.questions.length) {
+        return;
+    }
+    
+    const question = testConfig.questions[questionIndex];
+    currentQuestion = questionIndex;
+    
+    // Update question content
+    document.getElementById('question-content').innerHTML = `
+        <h4>Q${questionIndex + 1}. ${question.question}</h4>
+    `;
+    
+    // Update options
+    let optionsHtml = '';
+    const userAnswer = userAnswers[questionIndex] || '';
+    
+    for (const [letter, text] of Object.entries(question.options)) {
+        const checked = userAnswer === letter ? 'checked' : '';
+        optionsHtml += `
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="answer" id="option${letter}" 
+                       value="${letter}" ${checked} onchange="selectAnswer('${letter}')">
+                <label class="form-check-label option-label w-100" for="option${letter}">
+                    <strong>${letter})</strong> ${text}
+                </label>
+            </div>
+        `;
+    }
+    
+    document.getElementById('options-container').innerHTML = optionsHtml;
+    
+    // Update navigation
+    updateQuestionDisplay();
+    updateNavigationButtons();
+    generateQuestionNavigation();
+    
+    // Hide feedback
+    document.getElementById('feedback-container').style.display = 'none';
+}
+
+function selectAnswer(answer) {
+    userAnswers[currentQuestion] = answer;
+    updateStatistics();
+    
+    // Submit answer to server
+    const formData = new FormData();
+    formData.append('question_num', currentQuestion);
+    formData.append('answer', answer);
+    
+    fetch('/submit_answer', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.feedback && testConfig.feedback_mode === 'immediate') {
+            showImmediateFeedback(data.feedback);
+        }
+    })
+    .catch(error => console.error('Error submitting answer:', error));
+    
+    // Update navigation
+    generateQuestionNavigation();
+}
+
+function showImmediateFeedback(feedback) {
+    const feedbackContainer = document.getElementById('feedback-container');
+    const alertClass = feedback.correct ? 'alert-success' : 'alert-danger';
+    const icon = feedback.correct ? 'fa-check-circle' : 'fa-times-circle';
+    
+    feedbackContainer.innerHTML = `
+        <div class="alert ${alertClass} feedback-alert">
+            <h6><i class="fas ${icon} me-2"></i>${feedback.correct ? 'Correct!' : 'Incorrect'}</h6>
+            <p class="mb-0">
+                <strong>Correct Answer:</strong> ${feedback.correct_answer}<br>
+                <strong>Your Answer:</strong> ${feedback.user_answer}
+            </p>
+        </div>
+    `;
+    feedbackContainer.style.display = 'block';
+}
+
+function nextQuestion() {
+    if (currentQuestion < testConfig.total_questions - 1) {
+        loadQuestion(currentQuestion + 1);
+    }
+}
+
+function previousQuestion() {
+    if (currentQuestion > 0) {
+        loadQuestion(currentQuestion - 1);
+    }
+}
+
+function goToQuestion(questionIndex) {
+    loadQuestion(questionIndex);
+}
+
+function updateQuestionDisplay() {
+    document.getElementById('current-q-display').textContent = currentQuestion + 1;
+    const progressPercent = ((currentQuestion + 1) / testConfig.total_questions) * 100;
+    document.getElementById('progress-bar').style.width = progressPercent + '%';
+}
+
+function updateNavigationButtons() {
+    document.getElementById('prev-btn').disabled = currentQuestion === 0;
+    document.getElementById('next-btn').disabled = currentQuestion === testConfig.total_questions - 1;
+}
+
+function updateStatistics() {
+    const answered = Object.keys(userAnswers).length;
+    const remaining = testConfig.total_questions - answered;
+    
+    document.getElementById('answered-count').textContent = answered;
+    document.getElementById('unanswered-count').textContent = remaining;
+}
+
+function startTimer() {
+    const timerInterval = setInterval(() => {
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            autoSubmitTest();
+            return;
+        }
+        
+        timeLeft--;
+        updateTimerDisplay();
+    }, 1000);
+    
+    updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    document.getElementById('time-remaining').textContent = timeString;
+    
+    // Change color when time is running low
+    const timerElement = document.getElementById('timer');
+    if (timeLeft <= 300) { // 5 minutes
+        timerElement.className = 'timer-display text-danger';
+    } else if (timeLeft <= 600) { // 10 minutes
+        timerElement.className = 'timer-display text-warning';
+    }
+}
+
+function autoSubmitTest() {
+    const modal = new bootstrap.Modal(document.getElementById('autoSubmitModal'));
+    modal.show();
+    
+    // Submit after 3 seconds
+    setTimeout(() => {
+        window.location.href = '/submit_test';
+    }, 3000);
+}
+
+function submitTest() {
+    if (confirm('Are you sure you want to submit the test? This action cannot be undone.')) {
+        // Show loading state
+        const submitBtn = event.target;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+        submitBtn.disabled = true;
+        
+        // Submit the test
+        window.location.href = '/submit_test';
+    }
+}
+
+// Prevent page refresh/back button during test
+window.addEventListener('beforeunload', function(e) {
+    e.preventDefault();
+    e.returnValue = 'Are you sure you want to leave the test?';
+});
+
+// Handle visibility change (tab switching)
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        console.warn('User switched tabs during test');
+        // You could implement additional security measures here
+    }
+});
+</script>
+{% endblock %}
