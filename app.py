@@ -62,15 +62,14 @@ def upload_file():
     try:
         # Get form data
         name = request.form.get('name', '').strip()
-        email = request.form.get('email', '').strip()
         duration = request.form.get('duration', '30')
         positive_marks = request.form.get('positive_marks', '1')
         negative_marks = request.form.get('negative_marks', '0')
         feedback_mode = request.form.get('feedback_mode', 'final')
         
         # Validate required fields
-        if not name or not email:
-            flash('Name and email are required', 'error')
+        if not name:
+            flash('Name is required', 'error')
             return redirect(url_for('index'))
         
         # Check if file was uploaded
@@ -117,7 +116,6 @@ def upload_file():
             # Store only essential data in session
             session['test_config'] = {
                 'name': name,
-                'email': email,
                 'duration': int(duration),
                 'positive_marks': float(positive_marks),
                 'negative_marks': float(negative_marks),

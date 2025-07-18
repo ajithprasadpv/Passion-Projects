@@ -43,14 +43,36 @@ def parse_questions_from_file(filepath: str) -> Tuple[List[Dict], Dict[int, str]
         raise Exception(f"Unsupported file format: {file_ext}")
 
 def parse_pdf_questions(filepath: str) -> Tuple[List[Dict], Dict[int, str]]:
-    """Parse questions from PDF file"""
+    """Parse questions from PDF file with enhanced image handling"""
     try:
         with pdfplumber.open(filepath) as pdf:
             text = ""
-            for page in pdf.pages:
+            for page_num, page in enumerate(pdf.pages):
+                logging.debug(f"Processing PDF page {page_num + 1}")
+                
+                # Try multiple extraction methods for better text capture
                 page_text = page.extract_text()
+                
+                # If standard extraction fails or returns minimal text, try alternative methods
+                if not page_text or len(page_text.strip()) < 50:
+                    # Try extracting with layout preservation
+                    page_text = page.extract_text(layout=True)
+                
+                if not page_text or len(page_text.strip()) < 50:
+                    # Try character-level extraction for images with text
+                    chars = page.chars
+                    if chars:
+                        page_text = ''.join([char['text'] for char in chars])
+                
                 if page_text:
+                    # Clean up text artifacts from images
+                    page_text = clean_pdf_artifacts(page_text)
                     text += page_text + "\n"
+                    logging.debug(f"Extracted {len(page_text)} characters from page {page_num + 1}")
+                else:
+                    logging.warning(f"No text extracted from page {page_num + 1} - may contain only images")
+                    # Add placeholder for image-heavy pages
+                    text += f"\n[Page {page_num + 1} contains images/diagrams]\n"
         
         return extract_questions_from_text(text)
     
@@ -58,13 +80,49 @@ def parse_pdf_questions(filepath: str) -> Tuple[List[Dict], Dict[int, str]]:
         logging.error(f"Error parsing PDF: {str(e)}")
         raise Exception(f"Failed to parse PDF file: {str(e)}")
 
+def clean_pdf_artifacts(text: str) -> str:
+    """Clean up common PDF artifacts and improve text quality"""
+    if not text:
+        return text
+    
+    # Remove excessive whitespace
+    text = re.sub(r'\s+', ' ', text)
+    
+    # Fix common PDF artifacts
+    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)  # Add space between camelCase
+    text = re.sub(r'(\w)(\d+\.)', r'\1 \2', text)  # Add space before question numbers
+    text = re.sub(r'([.!?])([A-Z])', r'\1 \2', text)  # Add space after sentence endings
+    
+    # Clean up option formatting
+    text = re.sub(r'([A-D])\)(\w)', r'\1) \2', text)  # Add space after options
+    
+    return text.strip()
+
 def parse_docx_questions(filepath: str) -> Tuple[List[Dict], Dict[int, str]]:
-    """Parse questions from DOCX file"""
+    """Parse questions from DOCX file with enhanced image handling"""
     try:
         doc = Document(filepath)
         text = ""
-        for paragraph in doc.paragraphs:
-            text += paragraph.text + "\n"
+        
+        # Extract text from paragraphs
+        for para in doc.paragraphs:
+            if para.text.strip():
+                text += para.text + "\n"
+        
+        # Also extract text from tables (in case questions are in tables)
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if cell.text.strip():
+                        text += cell.text + " "
+                text += "\n"
+        
+        # Note about images in DOCX
+        images_count = len([rel for rel in doc.part.rels.values() 
+                           if "image" in rel.target_ref])
+        if images_count > 0:
+            logging.info(f"DOCX contains {images_count} images - text around images may need manual review")
+            text += f"\n[Document contains {images_count} images/diagrams]\n"
         
         return extract_questions_from_text(text)
     
@@ -247,69 +305,67 @@ def parse_single_question(text: str) -> Optional[Dict]:
         first_option_pos = option_positions[0][0]
         question_text = text[:first_option_pos].strip()
         
-        # Extract inline options with better pattern
-        # Handle cases where options might be just (a) (b) (c) (d) without content
-        full_pattern = r'\(([a-dA-D])\)\s*([^(]*?)(?=\s*\([a-dA-D]\)|$)'
-        option_matches = re.findall(full_pattern, text)
-        
-        for option_letter, option_text in option_matches:
-            option_text = option_text.strip()
-            # If option text is empty or very short, create a placeholder
-            if not option_text or len(option_text) < 2:
-                option_text = f"Option {option_letter.upper()}"
-            options[option_letter.upper()] = option_text
-        
-        # If we found option letters but no text, create basic options
-        if not options and len(option_positions) >= 2:
-            for pos, letter in option_positions[:4]:  # Take up to 4 options
-                options[letter.upper()] = f"Option {letter.upper()}"
-    
-    else:
-        # Pattern 2: Multiline options like A) Option1 \n B) Option2
-        lines = [line.strip() for line in text.split('\n') if line.strip()]
-        
-        if not lines:
-            return None
-        
-        # Find where options start (A), B), C), D))
-        option_start_idx = len(lines)
-        for i, line in enumerate(lines):
-            if re.match(r'^[A-D]\)', line, re.IGNORECASE):
-                option_start_idx = i
-                break
-        
-        # Join lines before options as question text
-        question_text = " ".join(lines[:option_start_idx]).strip()
+        # Handle images in questions - if question is very short, it might have an image
+        if len(question_text) < 30:
+            question_text += " [This question may contain an image or diagram]"
         
         # Extract options
-        for line in lines[option_start_idx:]:
-            option_match = re.match(r'^([A-D])\)\s*(.*)', line, re.IGNORECASE)
-            if option_match:
-                option_letter = option_match.group(1).upper()
-                option_text = option_match.group(2).strip()
-                if not option_text:
-                    option_text = f"Option {option_letter}"
-                options[option_letter] = option_text
+        for i, (pos, option_letter) in enumerate(option_positions):
+            # Find the end position for this option
+            next_pos = option_positions[i + 1][0] if i + 1 < len(option_positions) else len(text)
+            
+            # Extract option text
+            option_start = pos + 3  # Skip past "(x)"
+            option_text = text[option_start:next_pos].strip()
+            
+            # Clean up option text
+            option_text = re.sub(r'^\)\s*', '', option_text)  # Remove leading )
+            option_text = re.sub(r'\s*\([a-dA-D]\)\s*$', '', option_text)  # Remove trailing (x)
+            
+            # Handle empty or very short options (might be image-based)
+            if not option_text or len(option_text) < 3:
+                option_text = f"[Option {option_letter.upper()} - may contain image]"
+            
+            options[option_letter.upper()] = option_text
     
-    # Clean up question text - remove extra spaces and unwanted characters
-    if question_text:
-        # Remove various noise patterns commonly found in PDFs
-        question_text = re.sub(r'\s+', ' ', question_text)
-        question_text = re.sub(r'^[^\w]*', '', question_text)  # Remove leading non-word chars
-        question_text = question_text.strip()
+    else:
+        # Pattern 2: Multi-line format
+        lines = text.split('\n')
+        current_question = []
+        current_options = {}
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Check if this line contains an option pattern
+            option_match = re.match(r'^\(?([a-dA-D])\)?\s*(.+)', line)
+            if option_match and len(current_question) > 0:  # Only treat as option if we have question text
+                opt_letter = option_match.group(1).upper()
+                opt_text = option_match.group(2).strip()
+                
+                # Handle empty or very short options
+                if not opt_text or len(opt_text) < 3:
+                    opt_text = f"[Option {opt_letter} - may contain image]"
+                    
+                current_options[opt_letter] = opt_text
+            else:
+                # This is part of the question text
+                current_question.append(line)
+        
+        question_text = ' '.join(current_question).strip()
+        options = current_options
     
-    # Validate we have a question and at least 2 options
-    if not question_text or len(question_text) < 5:
-        logging.debug(f"Validation failed - question_text too short: '{question_text}' ({len(question_text) if question_text else 0} chars)")
+    # Validate that we have a reasonable question and options
+    if not question_text or len(options) < 2:
         return None
+        
+    # Final cleanup of question text
+    question_text = re.sub(r'\s+', ' ', question_text).strip()
     
-    if len(options) < 2:
-        logging.debug(f"Validation failed - insufficient options: {len(options)} options found")
-        return None
-    
-    logging.debug(f"Successfully parsed question: {question_text[:50]}... with {len(options)} options")
     return {
-        'question': question_text,
+        'text': question_text,
         'options': options
     }
 
