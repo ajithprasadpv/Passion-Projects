@@ -179,8 +179,8 @@ def submit_answer():
         question_num = int(request.form.get('question_num', 0))
         answer = request.form.get('answer', '')
         
-        # Store answer
-        session['test_state']['answers'][question_num] = answer
+        # Store answer (use string key for consistency)
+        session['test_state']['answers'][str(question_num)] = answer
         session.modified = True
         
         config = session['test_config']
@@ -316,7 +316,7 @@ def calculate_results(config, state):
     
     for i in range(config['total_questions']):
         question_num = i + 1
-        user_answer = state['answers'].get(i, '')
+        user_answer = state['answers'].get(str(i), '')
         correct_answer = answer_key.get(str(question_num), '')
         
         if not user_answer:

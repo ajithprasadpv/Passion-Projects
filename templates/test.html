@@ -243,7 +243,7 @@ function generateQuestionNavigation() {
     let html = '';
     
     for (let i = 0; i < testConfig.total_questions; i++) {
-        const answered = userAnswers.hasOwnProperty(i);
+        const answered = userAnswers.hasOwnProperty(i.toString());
         const btnClass = answered ? 'btn-success' : 'btn-outline-secondary';
         const current = i === currentQuestion ? 'active' : '';
         
@@ -279,7 +279,7 @@ async function loadQuestion(questionIndex) {
         
         // Update options
         let optionsHtml = '';
-        const userAnswer = userAnswers[questionIndex] || '';
+        const userAnswer = userAnswers[questionIndex.toString()] || '';
         
         for (const [letter, text] of Object.entries(question.options)) {
             const checked = userAnswer === letter ? 'checked' : '';
@@ -310,7 +310,7 @@ async function loadQuestion(questionIndex) {
 }
 
 function selectAnswer(answer) {
-    userAnswers[currentQuestion] = answer;
+    userAnswers[currentQuestion.toString()] = answer;
     updateStatistics();
     
     // Submit answer to server
@@ -423,7 +423,11 @@ function autoSubmitTest() {
     
     // Submit after 3 seconds
     setTimeout(() => {
-        window.location.href = '/submit_test';
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/submit_test';
+        document.body.appendChild(form);
+        form.submit();
     }, 3000);
 }
 
@@ -434,8 +438,12 @@ function submitTest() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
         submitBtn.disabled = true;
         
-        // Submit the test
-        window.location.href = '/submit_test';
+        // Submit the test using POST method
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/submit_test';
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 
