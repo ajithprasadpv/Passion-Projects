@@ -13,6 +13,7 @@ This is a Flask-based web application that allows users to upload question paper
 - ✅ **Resolved session size limitations**: Implemented temporary file storage for large question sets
 - ✅ **Fixed submission errors**: Corrected POST method handling and JSON serialization issues
 - ✅ **Application fully operational**: Successfully extracts 93-98 questions and handles complete test workflow
+- ✅ **User modification 1 completed**: Made negative marks field accept any decimal value (e.g., 0.33) using text input with pattern validation and JavaScript validation
 
 ## 🎯 **ROLLBACK POINT - FULLY WORKING APPLICATION** (July 18, 2025)
 
