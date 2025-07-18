@@ -102,27 +102,48 @@ def extract_questions_from_text(text: str) -> Tuple[List[Dict], Dict[int, str]]:
     
     logging.debug(f"Processing text of length: {len(text)}")
     
-    # Split text at "Answer Key" section (try multiple variations)
+    # Try to find a real answer key section, not just "correct answers" in instructions
+    # Look for patterns that indicate an actual answer key section
     answer_key_patterns = [
-        r'(?i)answer\s*key',
-        r'(?i)answers?\s*:',
-        r'(?i)solution\s*key',
-        r'(?i)correct\s*answers?'
+        r'(?i)answer\s*key\s*:?\s*[\r\n]',  # Answer Key: followed by newline
+        r'(?i)answers?\s*:?\s*[\r\n]\s*(?:Q?\d+[\.\:]\s*[A-D]|1[\.\:]\s*[A-D])',  # Answers: followed by actual answers
+        r'(?i)solution\s*key\s*:?\s*[\r\n]',
+        r'(?i)correct\s*answers?\s*:?\s*[\r\n]\s*(?:Q?\d+[\.\:]\s*[A-D]|1[\.\:]\s*[A-D])'  # Correct answers: followed by actual answers
     ]
     
     questions_text = text
     answer_text = ""
     
     for pattern in answer_key_patterns:
-        parts = re.split(pattern, text, maxsplit=1)
-        if len(parts) >= 2:
-            questions_text = parts[0]
-            answer_text = parts[1]
+        match = re.search(pattern, text)
+        if match:
+            split_pos = match.start()
+            questions_text = text[:split_pos]
+            answer_text = text[split_pos:]
             logging.debug(f"Found answer key section using pattern: {pattern}")
             break
     
     if not answer_text:
         logging.debug("No answer key section found, processing entire text as questions")
+        # For this specific case, let's try to find where questions actually end
+        # Look for common endings like page numbers, URLs, etc.
+        end_patterns = [
+            r'www\.[a-zA-Z.]+\s*$',  # Website at end
+            r'\d+\s*www\.[a-zA-Z.]+\s*$',  # Page number + website
+            r'^\s*\d+\s*$'  # Just page numbers
+        ]
+        
+        lines = text.split('\n')
+        questions_end = len(lines)
+        
+        # Find where questions likely end by looking for the last Q pattern
+        for i in range(len(lines) - 1, -1, -1):
+            if re.match(r'^\s*Q\d+\.', lines[i], re.IGNORECASE):
+                # Found last question, include some lines after it for options
+                questions_end = min(len(lines), i + 10)
+                break
+        
+        questions_text = '\n'.join(lines[:questions_end])
     
     # Extract questions
     questions = extract_questions_list(questions_text)

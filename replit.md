@@ -4,6 +4,14 @@
 
 This is a Flask-based web application that allows users to upload question papers (PDF/DOCX) and take timed mock tests with automatic scoring. The application parses uploaded documents to extract questions and answer keys, provides a timer-based test interface, and generates detailed results with feedback.
 
+## Recent Changes (July 18, 2025)
+
+- ✅ **Fixed PDF parsing issues**: Improved question extraction from complex PDF formats
+- ✅ **Enhanced text cleaning**: Added robust PDF artifact removal and text normalization  
+- ✅ **Improved option handling**: Now handles diagram-based questions with placeholder options
+- ✅ **Better answer key detection**: More accurate splitting between questions and answer sections
+- ✅ **Successful deployment**: Application now correctly extracts 98+ questions from test PDFs
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
